@@ -1,0 +1,7 @@
+# Service definition for ECPMi suction gripper control
+# Request
+string command  # "grip" or "release"
+---
+# Response  
+bool success
+string message 
