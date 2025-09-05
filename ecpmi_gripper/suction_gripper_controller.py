@@ -39,6 +39,7 @@ class SuctionGripperController(Node):
         
         # Gripper configuration - using pin 17 as it works
         self.VACUUM_OUTPUT_PIN = 17  # Tool Digital Output 1 (this one works!)
+        self.BLOW_OUTPUT_PIN = 16     # Tool Digital Output 0 for blow/purge (if available)
         
         # Wait for service to be available
         self.get_logger().info('Waiting for SetIO service...')
@@ -47,6 +48,7 @@ class SuctionGripperController(Node):
                 
         self.get_logger().info('Suction Gripper Controller initialized!')
         self.get_logger().info('Gripper control service available at: gripper_control')
+        self.get_logger().info('Available commands: grip, release, blow')
 
     def io_states_callback(self, msg):
         """Callback to update current I/O states"""
@@ -75,9 +77,15 @@ class SuctionGripperController(Node):
             response.success = success
             response.message = f"Release command: {'SUCCESS' if success else 'FAILED'}"
             
+        elif command == 'blow' :
+            success = self.blow()
+            response.success = success
+            response.message = f"Blow command: {'SUCCESS' if success else 'FAILED'}"
+            
+            
         else:
             response.success = False
-            response.message = f"Unknown command: {command}. Available commands: grip, release"
+            response.message = f"Unknown command: {command}. Available commands: grip, release, blow"
             
         self.get_logger().info(f"Service call: {command} -> {response.message}")
         return response
@@ -168,6 +176,39 @@ class SuctionGripperController(Node):
         """
         self.get_logger().info('Releasing object...')
         return self.vacuum_off()
+    
+    def blow(self):
+        """
+        Blow air to actively release stuck objects by breaking vacuum seal
+        This helps with objects that stick due to residual vacuum or adhesion
+        
+        Returns:
+            bool: Success status
+        """
+        self.get_logger().info('Blowing air to release object...')
+        
+        # First turn off vacuum
+        vacuum_off_success = self.vacuum_off()
+        
+        try:
+            blow_success = self.set_digital_output(self.BLOW_OUTPUT_PIN, True)
+            if blow_success:
+                self.get_logger().info('Blow activated - air pressure applied')
+                # Keep blow on for a short duration
+                import time
+                time.sleep(0.5)  # Blow for 500ms
+                # Turn off blow
+                blow_off_success = self.set_digital_output(self.BLOW_OUTPUT_PIN, False)
+                self.get_logger().info('Blow deactivated')
+                return vacuum_off_success and blow_success and blow_off_success
+            else:
+                self.get_logger().warn('Blow pin not responding, falling back to vacuum off only')
+                return vacuum_off_success
+        except Exception as e:
+            self.get_logger().warn(f'Blow functionality not available: {e}, using vacuum off only')
+            return vacuum_off_success
+    
+
 
 
 def main(args=None):
