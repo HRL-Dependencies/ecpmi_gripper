@@ -165,6 +165,7 @@ class SuctionGripperController(Node):
             bool: Success status
         """
         self.get_logger().info('Gripping object...')
+        self.set_digital_output(self.BLOW_OUTPUT_PIN, False)
         return self.vacuum_on()
     
     def release(self):
@@ -198,9 +199,9 @@ class SuctionGripperController(Node):
                 import time
                 time.sleep(0.5)  # Blow for 500ms
                 # Turn off blow
-                blow_off_success = self.set_digital_output(self.BLOW_OUTPUT_PIN, False)
+                # blow_off_success = self.set_digital_output(self.BLOW_OUTPUT_PIN, False)
                 self.get_logger().info('Blow deactivated')
-                return vacuum_off_success and blow_success and blow_off_success
+                return vacuum_off_success and blow_success #and blow_off_success
             else:
                 self.get_logger().warn('Blow pin not responding, falling back to vacuum off only')
                 return vacuum_off_success

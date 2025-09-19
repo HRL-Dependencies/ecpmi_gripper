@@ -16,6 +16,7 @@ This package provides a service-based interface for controlling a suction grippe
 
 **Request:**
 - `command` (string): "grip" or "release"
+- `command` (string): "grip", "release", or "blow"
 
 **Response:**
 - `success` (bool): True if command executed successfully
@@ -49,6 +50,9 @@ ros2 run ecpmi_gripper gripper_client grip
 
 # Release an object
 ros2 run ecpmi_gripper gripper_client release
+
+# Blow air (reverse vacuum)
+ros2 run ecpmi_gripper gripper_client blow
 ```
 
 ### Using the Service Directly
@@ -59,6 +63,9 @@ ros2 service call /gripper_control ecpmi_gripper/srv/GripperControl "{command: '
 
 # Release command
 ros2 service call /gripper_control ecpmi_gripper/srv/GripperControl "{command: 'release'}"
+
+# Blow command
+ros2 service call /gripper_control ecpmi_gripper/srv/GripperControl "{command: 'blow'}"
 ```
 
 ## Configuration
